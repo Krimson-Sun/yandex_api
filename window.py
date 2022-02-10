@@ -4,6 +4,13 @@ import pygame
 import os
 import requests
 from PIL import Image
+import math
+
+
+LAT_STEP = 0.008
+LON_STEP = 0.002
+coord_to_geo_x = 0.0000428
+coord_to_geo_y = 0.0000428
 
 
 toponym_to_find = ''
@@ -27,6 +34,8 @@ if not response:
 map_file = "map.png"
 with open(map_file, "wb") as file:
     file.write(response.content)
+
+
 
 pygame.init()
 screen = pygame.display.set_mode((600, 450))
