@@ -13,10 +13,6 @@ coord_to_geo_x = 0.0000428
 coord_to_geo_y = 0.0000428
 z = 17
 
-
-
-
-
 toponym_to_find = ''
 lon = '37.530887'
 lat = '55.703118'
@@ -44,15 +40,33 @@ screen.blit(pygame.image.load(map_file), (0, 0))
 pygame.display.flip()
 
 
-def new_image():
-    global api_server, map_file, params
-    response = requests.get(api_server, params=params)
-    os.remove(map_file)
-    map_file = "map.png"
-    with open(map_file, "wb") as file:
-        file.write(response.content)
+class Map_events:
+    def __init__(self):
+        self.z = 17
+        self.lon = 37.530887
+        self.lat = 55.703118
+        self.params = {
+            "ll": f'{self.lon},{self.lat}',
+            "z": self.z,
+            "l": "map"
+        }
+        self.api_server = "http://static-maps.yandex.ru/1.x"
+        self.map_file = "map.png"
 
+    def move_lon(self, t):
+        self.lon += LON_STEP * math.pow(2, 15-self.z) * t
 
+    def move_lat(self, t):
+        self.lat += LAT_STEP * math.pow(2, 15 - self.z) * t
+
+    def new_image(self):
+        response = requests.get(api_server, params=self.params)
+        os.remove(self.map_file)
+        self.map_file = "map.png"
+        with open(map_file, "wb") as file:
+            file.write(response.content)
+
+mapa = Map_events()
 running = True
 while running:
     for event in pygame.event.get():
@@ -60,13 +74,19 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_PAGEUP and z < 17:
-                z += 1
-                params['z'] = z
-                new_image()
+                mapa.z += 1
+                mapa.params['z'] = z
+                mapa.new_image()
             if event.key == pygame.K_PAGEDOWN and z > 0:
-                z -= 1
-                params['z'] = z
-                new_image()
+                mapa.z -= 1
+                mapa.params['z'] = z
+                mapa.new_image()
+            if event.type == pygame.K_UP and mapa.lat < 90:
+                mapa.move_lat(1)
+                mapa.new_image()
+            if event.type == pygame.K_DOWN and mapa.lat > -90:
+                mapa.move_lat(-1)
+                mapa.new_image()
             screen.blit(pygame.image.load(map_file), (0, 0))
             pygame.display.flip()
 
