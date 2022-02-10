@@ -11,15 +11,18 @@ LAT_STEP = 0.008
 LON_STEP = 0.002
 coord_to_geo_x = 0.0000428
 coord_to_geo_y = 0.0000428
+z = 17
+
+
+
 
 
 toponym_to_find = ''
 lon = '37.530887'
 lat = '55.703118'
-delta = '0.002'
 params = {
     "ll": ",".join([lon, lat]),
-    "spn": ",".join([delta, delta]),
+    "z": z,
     "l": "map"
 }
 api_server = "http://static-maps.yandex.ru/1.x"
@@ -35,15 +38,38 @@ map_file = "map.png"
 with open(map_file, "wb") as file:
     file.write(response.content)
 
-
-
 pygame.init()
 screen = pygame.display.set_mode((600, 450))
-# Рисуем картинку, загружаемую из только что созданного файла.
 screen.blit(pygame.image.load(map_file), (0, 0))
 pygame.display.flip()
-while pygame.event.wait().type != pygame.QUIT:
-    pass
-pygame.quit()
 
+
+def new_image():
+    global api_server, map_file, params
+    response = requests.get(api_server, params=params)
+    os.remove(map_file)
+    map_file = "map.png"
+    with open(map_file, "wb") as file:
+        file.write(response.content)
+
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_PAGEUP and z < 17:
+                z += 1
+                params['z'] = z
+                new_image()
+            if event.key == pygame.K_PAGEDOWN and z > 0:
+                z -= 1
+                params['z'] = z
+                new_image()
+            screen.blit(pygame.image.load(map_file), (0, 0))
+            pygame.display.flip()
+
+
+pygame.quit()
 os.remove(map_file)
